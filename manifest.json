@@ -1,0 +1,33 @@
+{
+  "id": "/InventarioCuentasCobro/",
+  "name": "Inventario y Cuentas de Cobro",
+  "short_name": "Inv&Cuentas",
+  "description": "Gestión de inventario y generación de cuentas de cobro, 100% offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#fdf5f8",
+  "theme_color": "#a84f74",
+  "lang": "es-CO",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

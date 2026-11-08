@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#a84f74">
+<title>Inventario &amp; Cuentas de Cobro</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="titulo">
+    <strong>Inv. &amp; Ctas. Cobro</strong>
+    <span id="hdrSubtitulo">Gestión de inventario</span>
+  </div>
+  <div class="btn-row">
+    <button class="icon-btn" id="btnSettings" title="Configuración">⚙️</button>
+  </div>
+</header>
+
+<nav class="tabs-nav">
+  <button class="tab-btn active" data-tab="tab1">Registro</button>
+  <button class="tab-btn" data-tab="tab2">Editar / Hist.</button>
+  <button class="tab-btn" data-tab="tab3">Hist. Productos</button>
+</nav>
+
+<!-- ======================= PESTAÑA 1 ======================= -->
+<section class="tab-panel active" id="tab1">
+
+  <div class="card">
+    <h2>Registro de entrada / cuenta de cobro</h2>
+
+    <div class="field">
+      <label for="f1_fecha">Fecha</label>
+      <input type="date" id="f1_fecha">
+    </div>
+
+    <div class="tipo-toggle">
+      <button class="tipo-btn entrada sel" id="f1_tipoEntrada" data-tipo="entrada">▲ Entrada</button>
+      <button class="tipo-btn cuenta" id="f1_tipoCuenta" data-tipo="cuenta">▼ Cta. Cobro (Salida)</button>
+    </div>
+
+    <div class="field">
+      <label for="f1_buscarProd">Producto</label>
+      <input type="text" id="f1_buscarProd" placeholder="Escribe para buscar..." autocomplete="off">
+      <div class="autocomplete-list" id="f1_acList"></div>
+    </div>
+
+    <div class="row-2">
+      <div class="field">
+        <label for="f1_cantidad">Cant.</label>
+        <input type="number" id="f1_cantidad" min="0" step="any" placeholder="0">
+      </div>
+      <div class="field">
+        <label for="f1_costoUnit">Costo Unit.</label>
+        <input type="number" id="f1_costoUnit" min="0" step="any" placeholder="0">
+      </div>
+    </div>
+    <div class="field">
+      <label>Costo Total Ítem</label>
+      <input type="text" id="f1_costoTotalItem" readonly value="$ 0">
+    </div>
+
+    <button class="btn btn-outline" id="f1_btnAgregarItem">+ Agregar producto al registro</button>
+
+    <div class="items-list" id="f1_itemsList"></div>
+
+    <div class="llave-box">
+      Llave ID: <strong id="f1_llaveId">—</strong>
+    </div>
+
+    <div class="total-box">
+      <span>Total Reg.</span>
+      <span class="monto" id="f1_totalReg">$ 0</span>
+    </div>
+
+    <button class="btn btn-primary" id="f1_btnGuardar">💾 Guardar registro</button>
+    <button class="btn btn-success" id="f1_btnGenerarCuenta" style="display:none;">📄 Generar cuenta de cobro (Word)</button>
+
+    <hr class="sep">
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="f1_btnRespaldoJson">⬇ Respaldo JSON</button>
+      <button class="btn btn-ghost" id="f1_btnCargarJson">⬆ Cargar respaldo</button>
+    </div>
+    <input type="file" id="f1_inputJson" accept="application/json,.json" style="display:none;">
+  </div>
+
+  <div class="card">
+    <h2>Productos — registro y modificación</h2>
+
+    <div class="btn-row">
+      <button class="btn btn-outline" id="f2_btnCargarCsv">⬆ Cargar CSV / XLSX / TXT</button>
+      <button class="btn btn-ghost" id="f2_btnPlantilla">📋 Plantilla CSV</button>
+    </div>
+    <input type="file" id="f2_inputCsv" accept=".csv,.txt,.xlsx" style="display:none;">
+    <small class="hint">Columnas: NombreProducto / CostoUnitario / Subproducto / CantidadSubproducto / CostoUnitarioSubproducto. Obligatorias: NombreProducto y CostoUnitario.</small>
+
+    <hr class="sep">
+
+    <div class="field">
+      <label for="f2_nombreProd">Nombre de producto</label>
+      <input type="text" id="f2_nombreProd" placeholder="Buscar o crear nuevo..." autocomplete="off">
+      <div class="autocomplete-list" id="f2_acList"></div>
+    </div>
+    <div class="field">
+      <label for="f2_costoProd">Costo unitario</label>
+      <input type="number" id="f2_costoProd" min="0" step="any" placeholder="0">
+    </div>
+
+    <div class="row-3">
+      <div class="field">
+        <label for="f2_subNombre">Subproducto (opcional)</label>
+        <input type="text" id="f2_subNombre" placeholder="—">
+      </div>
+      <div class="field">
+        <label for="f2_subCant">Cant. subprod.</label>
+        <input type="number" id="f2_subCant" min="0" step="any" placeholder="0">
+      </div>
+      <div class="field">
+        <label for="f2_subCosto">Costo subprod.</label>
+        <input type="number" id="f2_subCosto" min="0" step="any" placeholder="0">
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="f2_btnGuardarProd">💾 Guardar producto</button>
+  </div>
+
+  <footer class="app-footer">InventarioCuentasCobro · funciona sin conexión</footer>
+</section>
+
+<!-- ======================= PESTAÑA 2 ======================= -->
+<section class="tab-panel" id="tab2">
+
+  <div class="card">
+    <h2>Consultar / Modificar registro</h2>
+
+    <div class="field">
+      <label for="f3_buscarLlave">Llave ID</label>
+      <input type="text" id="f3_buscarLlave" placeholder="Ej: 07-11-26-Entrada-1" list="f3_listaLlaves" autocomplete="off">
+      <datalist id="f3_listaLlaves"></datalist>
+    </div>
+
+    <div id="f3_formEdicion" style="display:none;">
+      <div class="field">
+        <label for="f3_fecha">Fecha</label>
+        <input type="date" id="f3_fecha">
+      </div>
+      <div class="field">
+        <label>Tipo de registro</label>
+        <input type="text" id="f3_tipo" readonly>
+      </div>
+
+      <div class="items-list" id="f3_itemsList"></div>
+
+      <div class="row-2">
+        <div class="field">
+          <label for="f3_buscarProd">Añadir producto</label>
+          <input type="text" id="f3_buscarProd" placeholder="Buscar producto..." autocomplete="off">
+          <div class="autocomplete-list" id="f3_acList"></div>
+        </div>
+        <div class="field">
+          <label for="f3_cantidadNueva">Cantidad</label>
+          <input type="number" id="f3_cantidadNueva" min="0" step="any" placeholder="0">
+        </div>
+      </div>
+      <button class="btn btn-outline" id="f3_btnAgregarItem">+ Agregar producto al registro</button>
+
+      <div class="total-box">
+        <span>Total Reg.</span>
+        <span class="monto" id="f3_totalReg">$ 0</span>
+      </div>
+
+      <button class="btn btn-primary" id="f3_btnGuardarMod">💾 Guardar modificación</button>
+      <button class="btn btn-danger" id="f3_btnAnular">🚫 Anular registro</button>
+    </div>
+    <div class="empty-state" id="f3_vacio">Busca un registro por su Llave ID, o usa "ModificarReg" en el histórico de abajo.</div>
+  </div>
+
+  <div class="card">
+    <h2>Histórico de registros</h2>
+    <div class="table-wrap">
+      <table class="hist">
+        <thead>
+          <tr>
+            <th>Llave ID</th><th>Fecha</th><th>Tipo</th><th>Producto</th>
+            <th>Cant.</th><th>C. Unit.</th><th>C. Total</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="f3_tablaHistorico"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="f3_histVacio" style="display:none;">Aún no hay registros.</div>
+  </div>
+</section>
+
+<!-- ======================= PESTAÑA 3 ======================= -->
+<section class="tab-panel" id="tab3">
+  <div class="card">
+    <h2>Historial de productos (inventario)</h2>
+    <button class="btn btn-outline" id="f4_btnFiltrar">🔎 Filtrar productos</button>
+    <div class="filter-chips" id="f4_chips" style="display:none;"></div>
+
+    <div class="table-wrap">
+      <table class="hist">
+        <thead>
+          <tr>
+            <th>Producto</th><th>Cant.</th><th>C. Unit.</th><th>C. Total</th>
+            <th>Fecha</th><th>Tipo</th><th>Llave ID</th>
+          </tr>
+        </thead>
+        <tbody id="f4_tabla"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="f4_vacio" style="display:none;">No hay movimientos para mostrar.</div>
+  </div>
+</section>
+
+<!-- ======================= MODAL CONFIGURACIÓN ======================= -->
+<div class="modal-overlay" id="modalSettings">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Configuración — Datos cuenta de cobro</h3>
+      <button class="modal-close" data-close="modalSettings">✕</button>
+    </div>
+
+    <div class="field">
+      <label for="cfg_companiaNombre">Nombre de la compañía</label>
+      <input type="text" id="cfg_companiaNombre" placeholder="COMERCIALIZADORA...">
+    </div>
+    <div class="field">
+      <label for="cfg_companiaNit">NIT de la compañía</label>
+      <input type="text" id="cfg_companiaNit" placeholder="900000000">
+    </div>
+    <div class="field">
+      <label for="cfg_ciudad">Ciudad (para encabezado de fecha)</label>
+      <input type="text" id="cfg_ciudad" placeholder="Neiva, Huila">
+    </div>
+    <hr class="sep">
+    <div class="field">
+      <label for="cfg_debeA">Debe a (nombre completo)</label>
+      <input type="text" id="cfg_debeA" placeholder="Nombre completo">
+    </div>
+    <div class="field">
+      <label for="cfg_debeACc">C.C.</label>
+      <input type="text" id="cfg_debeACc" placeholder="0.000.000">
+    </div>
+    <div class="field">
+      <label for="cfg_debeATel">Celular</label>
+      <input type="text" id="cfg_debeATel" placeholder="300 000 0000">
+    </div>
+    <div class="field">
+      <label for="cfg_debeADireccion">Dirección</label>
+      <input type="text" id="cfg_debeADireccion" placeholder="Calle...">
+    </div>
+
+    <button class="btn btn-primary" id="cfg_btnGuardar">Guardar configuración</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="js/numToWords.js"></script>
+<script src="js/db.js"></script>
+<script src="js/xlsxLite.js"></script>
+<script src="js/importExport.js"></script>
+<script src="js/docGen.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
