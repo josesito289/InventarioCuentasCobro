@@ -44,7 +44,7 @@ const DocGen = (() => {
     return out;
   }
 
-  function generarCuentaDeCobroRtf(record, settings) {
+  function generarCuentaDeCobroRtf(record, company, settings) {
     const fechaLarga = _fechaLarga(record.fecha);
     const ciudad = settings.ciudad || '';
     const total = record.items.reduce((s, it) => s + (Number(it.costoTotal) || 0), 0);
@@ -71,8 +71,8 @@ const DocGen = (() => {
 \\pard\\qc\\b\\fs28 CUENTA DE COBRO\\b0\\fs22\\par
 \\par
 \\pard\\ql\\b ${_rtfEscape('LA COMPAÑIA:')}\\b0\\par
-\\b ${_rtfEscape(settings.companiaNombre || '')}\\b0\\par
-NIT ${_rtfEscape(settings.companiaNit || '')}\\par
+\\b ${_rtfEscape((company && company.nombre) || '')}\\b0\\par
+NIT ${_rtfEscape((company && company.nit) || '')}\\par
 \\par
 \\b DEBE A:\\b0  ${_rtfEscape(settings.debeA || '')}\\par
 \\b C.C.\\b0  ${_rtfEscape(settings.debeACc || '')}\\par
@@ -95,8 +95,8 @@ ${_rtfEscape('Dirección:')} ${_rtfEscape(settings.debeADireccion || '')}\\par
     return rtf;
   }
 
-  function descargarCuentaDeCobro(record, settings) {
-    const rtf = generarCuentaDeCobroRtf(record, settings);
+  function descargarCuentaDeCobro(record, company, settings) {
+    const rtf = generarCuentaDeCobroRtf(record, company, settings);
     const blob = new Blob([rtf], { type: 'application/rtf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

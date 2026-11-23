@@ -6,7 +6,20 @@ const DB = (() => {
     PRODUCTS: 'icc_products_v1',
     RECORDS: 'icc_records_v1',
     SETTINGS: 'icc_settings_v1',
+    COMPANIES: 'icc_companies_v1',
     SEQ: 'icc_seq_v1' // contador de secuencias por fecha+tipo
+  };
+
+  const ESTADOS = {
+    PENDIENTE: 'pendiente',
+    PAGADO: 'pagado',
+    PARCIAL: 'pago_parcial'
+  };
+
+  const ESTADO_LABELS = {
+    pendiente: 'PENDIENTE',
+    pagado: 'PAGADO',
+    pago_parcial: 'PAGO PARCIAL'
   };
 
   function _read(key, fallback) {
@@ -138,11 +151,9 @@ const DB = (() => {
     return `${prefix}${max + 1}`;
   }
 
-  // ---------- Configuración (datos encabezado cuenta de cobro) ----------
+  // ---------- Configuración (datos fijos de quien emite la cuenta de cobro) ----------
   function getSettings() {
-    return _read(KEYS.SETTINGS, {
-      companiaNombre: '',
-      companiaNit: '',
+    const s = _read(KEYS.SETTINGS, {
       ciudad: '',
       debeA: '',
       debeACc: '',
@@ -150,20 +161,120 @@ const DB = (() => {
       debeADireccion: '',
       tema: 'rosa'
     });
+    _migrarCompaniaUnica(s);
+    return s;
   }
 
   function saveSettings(settings) {
     return _write(KEYS.SETTINGS, settings);
   }
 
+  // Migración desde versiones anteriores (1.0.0) donde sólo existía UNA
+  // compañía, guardada dentro de settings (companiaNombre / companiaNit).
+  // Si detecta esos datos y aún no hay compañías registradas, crea la
+  // primera compañía automáticamente para no perder información.
+  function _migrarCompaniaUnica(settings) {
+    if (settings.companiaNombre && getCompanies().length === 0) {
+      upsertCompany({ nombre: settings.companiaNombre, nit: settings.companiaNit || '' });
+    }
+  }
+
+  // ---------- Compañías (a quienes se les dirige la cuenta de cobro) ----------
+  function getCompanies() {
+    return _read(KEYS.COMPANIES, []);
+  }
+
+  function saveCompanies(companies) {
+    return _write(KEYS.COMPANIES, companies);
+  }
+
+  function upsertCompany(company) {
+    const companies = getCompanies();
+    if (company.id) {
+      const idx = companies.findIndex(c => c.id === company.id);
+      if (idx >= 0) {
+        companies[idx] = { ...companies[idx], ...company };
+        saveCompanies(companies);
+        return companies[idx];
+      }
+    }
+    company.id = company.id || _uuid();
+    companies.push(company);
+    saveCompanies(companies);
+    return company;
+  }
+
+  function findCompanyById(id) {
+    return getCompanies().find(c => c.id === id);
+  }
+
+  function deleteCompany(id) {
+    saveCompanies(getCompanies().filter(c => c.id !== id));
+  }
+
+  // ---------- Estados / saldo de cuentas de cobro ----------
+  // Normaliza estado + abono y calcula el saldo resultante, además de la
+  // fecha de pago (se marca cuando el estado pasa a PAGADO).
+  function calcularEstadoRegistro({ estado, total, abono, fechaPagoAnterior, estadoAnterior }) {
+    total = Number(total) || 0;
+    let ab = Number(abono) || 0;
+    let saldo = total;
+    let fechaPago = null;
+
+    if (estado === ESTADOS.PAGADO) {
+      ab = total;
+      saldo = 0;
+      fechaPago = (estadoAnterior === ESTADOS.PAGADO && fechaPagoAnterior) ? fechaPagoAnterior : hoyISO_();
+    } else if (estado === ESTADOS.PARCIAL) {
+      if (ab < 0) ab = 0;
+      if (ab > total) ab = total;
+      saldo = Math.max(total - ab, 0);
+      fechaPago = null;
+    } else { // PENDIENTE
+      ab = 0;
+      saldo = total;
+      fechaPago = null;
+    }
+    return { estado, abono: ab, saldo, fechaPago };
+  }
+
+  function hoyISO_() {
+    const d = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  // Totales por tercero (compañía), a partir de las cuentas de cobro no anuladas.
+  function saldosPorTercero(companiaId) {
+    const records = getRecords().filter(r => r.tipo === 'cuenta' && !r.anulado && r.companiaId === companiaId);
+    const totalCompras = records.reduce((s, r) => s + (Number(r.total) || 0), 0);
+    const totalPendiente = records.reduce((s, r) => s + (Number(r.saldo != null ? r.saldo : r.total) || 0), 0);
+    return { totalCompras, totalPendiente };
+  }
+
+  // Existencias disponibles por producto: suma de entradas - suma de salidas (cuentas de cobro).
+  function existenciasPorProducto() {
+    const mapa = {};
+    getRecords().forEach(r => {
+      if (r.anulado) return;
+      const signo = r.tipo === 'entrada' ? 1 : -1;
+      (r.items || []).forEach(it => {
+        const nombre = it.producto;
+        mapa[nombre] = (mapa[nombre] || 0) + signo * (Number(it.cantidad) || 0);
+      });
+    });
+    return mapa;
+  }
+
   // ---------- Respaldo completo ----------
   function exportAll() {
     return {
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       products: getProducts(),
       records: getRecords(),
-      settings: getSettings()
+      settings: getSettings(),
+      companies: getCompanies()
     };
   }
 
@@ -172,6 +283,7 @@ const DB = (() => {
     if (Array.isArray(data.products)) saveProducts(data.products);
     if (Array.isArray(data.records)) saveRecords(data.records);
     if (data.settings) saveSettings(data.settings);
+    if (Array.isArray(data.companies)) saveCompanies(data.companies);
     return true;
   }
 
@@ -184,8 +296,11 @@ const DB = (() => {
   }
 
   return {
+    ESTADOS, ESTADO_LABELS,
     getProducts, saveProducts, upsertProduct, findProduct, searchProducts, deleteProduct,
     getRecords, saveRecords, getRecordById, upsertRecord, deleteRecord, anularRecord,
-    nextLlaveId, getSettings, saveSettings, exportAll, importAll, uuid: _uuid
+    nextLlaveId, getSettings, saveSettings, exportAll, importAll, uuid: _uuid,
+    getCompanies, saveCompanies, upsertCompany, findCompanyById, deleteCompany,
+    calcularEstadoRegistro, saldosPorTercero, existenciasPorProducto
   };
 })();

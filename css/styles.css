@@ -207,6 +207,30 @@ button, input, select { font-family: inherit; }
 .autocomplete-list div:active, .autocomplete-list div.hl { background: var(--rose-100); }
 .autocomplete-list .ac-empty { color: var(--ink-500); font-style: italic; }
 
+/* Compañías (modal configuración) */
+.company-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--gray-100);
+  border-radius: 8px;
+  padding: 7px 10px;
+  margin-bottom: 6px;
+  font-size: 12.5px;
+}
+.company-row .nombre { font-weight: 600; }
+.company-row .nit { color: var(--ink-500); font-size: 11px; }
+.company-row .acciones { display: flex; gap: 6px; }
+.company-row button {
+  background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px;
+}
+
+/* Estado cuenta de cobro */
+.chip.pendiente { background: #fde9c8; color: #8a5a00; }
+.chip.pagado { background: #dcf3e6; color: var(--verde-dark); }
+.chip.pago_parcial { background: #e0d9f7; color: #5b3b9e; }
+
 /* Botones generales */
 .btn {
   display: inline-flex;

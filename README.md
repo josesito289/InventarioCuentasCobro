@@ -4,6 +4,9 @@ PWA de gestión de inventario y generación de cuentas de cobro. Funciona
 100% sin conexión una vez instalada, guarda todo localmente en el
 dispositivo y permite generar/restaurar un respaldo en JSON.
 
+**Versión actual:** 1.1.0 — ver [`CHANGELOG.md`](./CHANGELOG.md) para el
+detalle de cambios de cada versión.
+
 ## 1. Subir a GitHub
 
 1. Crea un repositorio nuevo en GitHub llamado **`InventarioCuentasCobro`**
@@ -50,20 +53,37 @@ dispositivo y permite generar/restaurar un respaldo en JSON.
 
 ## 4. Uso de la app
 
-- **Pestaña "Registro"**: registra entradas de inventario o genera
-  cuentas de cobro (salidas), y administra el catálogo de productos
-  (manual o importando CSV/TXT/XLSX).
-- **Pestaña "Editar / Hist."**: busca un registro por su Llave ID,
-  modifícalo o anúlalo, y revisa el histórico completo.
+- **Pestaña "Registro"**:
+  - Arriba, **"Saldos por tercero"**: elige una compañía y consulta de
+    inmediato cuánto te debe (total pendiente, incluyendo pagos
+    parciales) y cuánto te ha comprado en total.
+  - Registra entradas de inventario o genera cuentas de cobro (salidas).
+    Al elegir "Cta. Cobro (Salida)" la app te pide la **compañía** a la
+    que va dirigida (puedes crear una nueva al vuelo) y el **estado**
+    (PENDIENTE, PAGADO o PAGO PARCIAL — este último despliega el campo
+    de valor abonado).
+  - Administra el catálogo de productos (manual o importando
+    CSV/TXT/XLSX).
+- **Pestaña "Editar / Hist."**:
+  - Busca un registro por su Llave ID, modifícalo (incluyendo el estado
+    de pago) o anúlalo.
+  - Cada cuenta de cobro muestra su **Tercero**, **Saldo** y **Fecha de
+    pago**, y un botón **"Descargar cuenta de cobro"** para volver a
+    generar el `.rtf` cuando quieras (ya no solo al momento de crearla).
+  - El histórico se puede **filtrar por tercero**, y muestra Tercero,
+    Estado y Saldo de cada movimiento.
 - **Pestaña "Hist. Productos"**: consulta el historial de movimientos
-  filtrando por producto.
-- **⚙️ (arriba a la derecha)**: configura los datos fijos de la cuenta
-  de cobro (nombre y NIT de la compañía, y tus datos como quien cobra).
-  Complétalos antes de generar la primera cuenta de cobro.
+  filtrando por producto, y ve de un vistazo la columna **Existencias**
+  (entradas menos salidas, es decir lo disponible para la venta).
+- **⚙️ (arriba a la derecha)**: administra tus **compañías** (puedes
+  tener varias, cada una con su nombre y NIT) y tus datos fijos como
+  quien cobra (nombre, cédula, celular, dirección, ciudad). Completa al
+  menos una compañía y tus datos antes de generar la primera cuenta de
+  cobro.
 - **Respaldo**: el botón "Respaldo JSON" descarga un archivo con todos
-  los productos y registros. Guárdalo en un lugar seguro (Drive, correo,
-  etc.) de vez en cuando. "Cargar respaldo" lo restaura por completo
-  (reemplaza los datos actuales).
+  los productos, registros y compañías. Guárdalo en un lugar seguro
+  (Drive, correo, etc.) de vez en cuando. "Cargar respaldo" lo restaura
+  por completo (reemplaza los datos actuales).
 
 ## 5. Generar la cuenta de cobro en Word
 
@@ -74,7 +94,26 @@ se abre directamente con Word (en el teléfono o en un computador) sin
 necesidad de conversiones ni conexión a internet, y desde Word puedes
 guardarlo como `.docx` si lo necesitas.
 
-## 6. Notas técnicas / decisiones de diseño
+## 6. Estructura del proyecto
+
+```
+InventarioCuentasCobro/
+├── index.html            Interfaz (3 pestañas) y modal de configuración
+├── manifest.json          Manifest PWA (id, íconos, display standalone)
+├── sw.js                  Service Worker (caché offline del app shell)
+├── css/styles.css         Estilos (paleta rosa/malva, responsive)
+├── js/db.js               Capa de almacenamiento (localStorage)
+├── js/numToWords.js       Números a letras (para "Valor en letras")
+├── js/xlsxLite.js         Lector .xlsx sin dependencias externas
+├── js/importExport.js     Import CSV/TXT/XLSX, plantilla, respaldo JSON
+├── js/docGen.js           Generador de la cuenta de cobro en .rtf
+├── js/app.js              Lógica de interfaz y conexión entre módulos
+├── icons/                 Íconos de la PWA (192, 512, 512 maskable)
+├── README.md
+└── CHANGELOG.md
+```
+
+## 7. Notas técnicas / decisiones de diseño
 
 - **Almacenamiento:** se usa `localStorage` del navegador (datos propios
   del origen `https://TU_USUARIO.github.io/InventarioCuentasCobro/`).
@@ -94,3 +133,18 @@ guardarlo como `.docx` si lo necesitas.
 - **Llave ID:** se genera automáticamente como `DD-MM-AA-Tipo-N`, donde
   `N` es un consecutivo que reinicia por combinación de fecha + tipo
   (Entrada/Cuenta).
+- **Tercero:** en las cuentas de cobro es la compañía seleccionada; en
+  las entradas es el nombre de quien cobra (tus propios datos), ya que
+  una entrada no se dirige a ningún cliente.
+- **Total pendiente por pagar (saldos por tercero):** suma el *saldo*
+  de todas las cuentas de cobro no anuladas de ese tercero (lo que
+  incluye tanto las PENDIENTES completas como lo que falte de las de
+  PAGO PARCIAL). Se tomó esta definición — en vez de sumar solo las
+  marcadas como PENDIENTE — porque es la que refleja de verdad cuánto
+  te queda por cobrar.
+- **Campos numéricos (cantidad, costo, abono):** se cambiaron de
+  `<input type="number">` a `<input type="text" inputmode="decimal">`
+  con un filtro propio en JavaScript. Esto corrige un bug conocido de
+  Chrome/Android (reportado en un Motorola G24) donde el teclado
+  numérico nativo de algunos equipos duplica o agrega dígitos de más al
+  escribir en campos `type="number"`.

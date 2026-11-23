@@ -32,6 +32,26 @@
 <section class="tab-panel active" id="tab1">
 
   <div class="card">
+    <h2>Saldos por tercero</h2>
+    <div class="field">
+      <label for="f0_tercero">Nombre tercero</label>
+      <select id="f0_tercero">
+        <option value="">— Selecciona un tercero —</option>
+      </select>
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>Total pendiente por pagar</label>
+        <input type="text" id="f0_totalPendiente" readonly value="$ 0">
+      </div>
+      <div class="field">
+        <label>Total compras</label>
+        <input type="text" id="f0_totalCompras" readonly value="$ 0">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
     <h2>Registro de entrada / cuenta de cobro</h2>
 
     <div class="field">
@@ -44,6 +64,38 @@
       <button class="tipo-btn cuenta" id="f1_tipoCuenta" data-tipo="cuenta">▼ Cta. Cobro (Salida)</button>
     </div>
 
+    <div class="field" id="f1_companiaWrap" style="display:none;">
+      <label for="f1_compania">Compañía a la que va dirigida</label>
+      <select id="f1_compania">
+        <option value="">— Selecciona una compañía —</option>
+        <option value="__nueva__">➕ Nueva compañía...</option>
+      </select>
+    </div>
+    <div class="row-2" id="f1_companiaNuevaWrap" style="display:none;">
+      <div class="field">
+        <label for="f1_companiaNuevaNombre">Nombre nueva compañía</label>
+        <input type="text" id="f1_companiaNuevaNombre" placeholder="Nombre...">
+      </div>
+      <div class="field">
+        <label for="f1_companiaNuevaNit">NIT</label>
+        <input type="text" id="f1_companiaNuevaNit" placeholder="900000000">
+      </div>
+    </div>
+    <button class="btn btn-outline" id="f1_btnGuardarCompaniaNueva" style="display:none;">Guardar compañía</button>
+
+    <div class="field" id="f1_estadoWrap" style="display:none;">
+      <label for="f1_estado">Estado de la cuenta de cobro</label>
+      <select id="f1_estado">
+        <option value="pendiente">PENDIENTE</option>
+        <option value="pagado">PAGADO</option>
+        <option value="pago_parcial">PAGO PARCIAL</option>
+      </select>
+    </div>
+    <div class="field" id="f1_abonoWrap" style="display:none;">
+      <label for="f1_abono">Valor abonado</label>
+      <input type="text" class="num-input" id="f1_abono" placeholder="0">
+    </div>
+
     <div class="field">
       <label for="f1_buscarProd">Producto</label>
       <input type="text" id="f1_buscarProd" placeholder="Escribe para buscar..." autocomplete="off">
@@ -53,11 +105,11 @@
     <div class="row-2">
       <div class="field">
         <label for="f1_cantidad">Cant.</label>
-        <input type="number" id="f1_cantidad" min="0" step="any" placeholder="0">
+        <input type="text" class="num-input" id="f1_cantidad" placeholder="0">
       </div>
       <div class="field">
         <label for="f1_costoUnit">Costo Unit.</label>
-        <input type="number" id="f1_costoUnit" min="0" step="any" placeholder="0">
+        <input type="text" class="num-input" id="f1_costoUnit" placeholder="0">
       </div>
     </div>
     <div class="field">
@@ -108,7 +160,7 @@
     </div>
     <div class="field">
       <label for="f2_costoProd">Costo unitario</label>
-      <input type="number" id="f2_costoProd" min="0" step="any" placeholder="0">
+      <input type="text" class="num-input" id="f2_costoProd" placeholder="0">
     </div>
 
     <div class="row-3">
@@ -118,11 +170,11 @@
       </div>
       <div class="field">
         <label for="f2_subCant">Cant. subprod.</label>
-        <input type="number" id="f2_subCant" min="0" step="any" placeholder="0">
+        <input type="text" class="num-input" id="f2_subCant" placeholder="0">
       </div>
       <div class="field">
         <label for="f2_subCosto">Costo subprod.</label>
-        <input type="number" id="f2_subCosto" min="0" step="any" placeholder="0">
+        <input type="text" class="num-input" id="f2_subCosto" placeholder="0">
       </div>
     </div>
 
@@ -153,6 +205,10 @@
         <label>Tipo de registro</label>
         <input type="text" id="f3_tipo" readonly>
       </div>
+      <div class="field">
+        <label>Tercero</label>
+        <input type="text" id="f3_tercero" readonly>
+      </div>
 
       <div class="items-list" id="f3_itemsList"></div>
 
@@ -164,7 +220,7 @@
         </div>
         <div class="field">
           <label for="f3_cantidadNueva">Cantidad</label>
-          <input type="number" id="f3_cantidadNueva" min="0" step="any" placeholder="0">
+          <input type="text" class="num-input" id="f3_cantidadNueva" placeholder="0">
         </div>
       </div>
       <button class="btn btn-outline" id="f3_btnAgregarItem">+ Agregar producto al registro</button>
@@ -174,6 +230,31 @@
         <span class="monto" id="f3_totalReg">$ 0</span>
       </div>
 
+      <div class="field" id="f3_estadoWrap" style="display:none;">
+        <label for="f3_estado">Estado de la cuenta de cobro</label>
+        <select id="f3_estado">
+          <option value="pendiente">PENDIENTE</option>
+          <option value="pagado">PAGADO</option>
+          <option value="pago_parcial">PAGO PARCIAL</option>
+        </select>
+      </div>
+      <div class="field" id="f3_abonoWrap" style="display:none;">
+        <label for="f3_abono">Valor abonado</label>
+        <input type="text" class="num-input" id="f3_abono" placeholder="0">
+      </div>
+
+      <div class="row-2" id="f3_saldoWrap" style="display:none;">
+        <div class="field">
+          <label>Saldo</label>
+          <input type="text" id="f3_saldo" readonly value="$ 0">
+        </div>
+        <div class="field">
+          <label>Fecha pago</label>
+          <input type="text" id="f3_fechaPago" readonly value="—">
+        </div>
+      </div>
+      <button class="btn btn-outline" id="f3_btnDescargar" style="display:none;">📄 Descargar cuenta de cobro</button>
+
       <button class="btn btn-primary" id="f3_btnGuardarMod">💾 Guardar modificación</button>
       <button class="btn btn-danger" id="f3_btnAnular">🚫 Anular registro</button>
     </div>
@@ -182,12 +263,14 @@
 
   <div class="card">
     <h2>Histórico de registros</h2>
+    <button class="btn btn-outline" id="f3_btnFiltrarTercero">🔎 Filtrar por tercero</button>
+    <div class="filter-chips" id="f3_chipsTercero" style="display:none;"></div>
     <div class="table-wrap">
       <table class="hist">
         <thead>
           <tr>
-            <th>Llave ID</th><th>Fecha</th><th>Tipo</th><th>Producto</th>
-            <th>Cant.</th><th>C. Unit.</th><th>C. Total</th><th></th>
+            <th>Llave ID</th><th>Fecha</th><th>Tipo</th><th>Tercero</th><th>Producto</th>
+            <th>Cant.</th><th>C. Unit.</th><th>C. Total</th><th>Estado</th><th>Saldo</th><th></th>
           </tr>
         </thead>
         <tbody id="f3_tablaHistorico"></tbody>
@@ -209,7 +292,7 @@
         <thead>
           <tr>
             <th>Producto</th><th>Cant.</th><th>C. Unit.</th><th>C. Total</th>
-            <th>Fecha</th><th>Tipo</th><th>Llave ID</th>
+            <th>Fecha</th><th>Tipo</th><th>Llave ID</th><th>Existencias</th>
           </tr>
         </thead>
         <tbody id="f4_tabla"></tbody>
@@ -227,19 +310,27 @@
       <button class="modal-close" data-close="modalSettings">✕</button>
     </div>
 
-    <div class="field">
-      <label for="cfg_companiaNombre">Nombre de la compañía</label>
-      <input type="text" id="cfg_companiaNombre" placeholder="COMERCIALIZADORA...">
+    <h3 style="font-size:13px;color:var(--rose-700);margin-bottom:8px;">Compañías (a quienes se dirigen las cuentas de cobro)</h3>
+    <div id="cfg_listaCompanias" style="margin-bottom:10px;"></div>
+    <div class="row-2">
+      <div class="field">
+        <label for="cfg_nuevaCompaniaNombre">Nombre compañía</label>
+        <input type="text" id="cfg_nuevaCompaniaNombre" placeholder="COMERCIALIZADORA...">
+      </div>
+      <div class="field">
+        <label for="cfg_nuevaCompaniaNit">NIT</label>
+        <input type="text" id="cfg_nuevaCompaniaNit" placeholder="900000000">
+      </div>
     </div>
-    <div class="field">
-      <label for="cfg_companiaNit">NIT de la compañía</label>
-      <input type="text" id="cfg_companiaNit" placeholder="900000000">
-    </div>
+    <button class="btn btn-outline" id="cfg_btnAgregarCompania">+ Agregar / actualizar compañía</button>
+
+    <hr class="sep">
     <div class="field">
       <label for="cfg_ciudad">Ciudad (para encabezado de fecha)</label>
       <input type="text" id="cfg_ciudad" placeholder="Neiva, Huila">
     </div>
     <hr class="sep">
+    <h3 style="font-size:13px;color:var(--rose-700);margin-bottom:8px;">Datos de quien cobra</h3>
     <div class="field">
       <label for="cfg_debeA">Debe a (nombre completo)</label>
       <input type="text" id="cfg_debeA" placeholder="Nombre completo">
