@@ -254,6 +254,9 @@
   function refrescarCompanias() {
     f1PoblarCompanias();
     f0PoblarTerceros();
+    if (typeof f3State !== 'undefined' && f3State.record && f3State.record.tipo === 'cuenta') {
+      f3PoblarTerceroCompania(f3.terceroCompania.value || f3State.record.companiaId);
+    }
   }
 
   // =======================================================================
@@ -587,7 +590,8 @@
     vacio: document.getElementById('f3_vacio'),
     fecha: document.getElementById('f3_fecha'),
     tipo: document.getElementById('f3_tipo'),
-    tercero: document.getElementById('f3_tercero'),
+    terceroCompania: document.getElementById('f3_terceroCompania'),
+    terceroTexto: document.getElementById('f3_terceroTexto'),
     itemsList: document.getElementById('f3_itemsList'),
     buscarProd: document.getElementById('f3_buscarProd'),
     acList: document.getElementById('f3_acList'),
@@ -640,6 +644,15 @@
   });
   f3.abono.addEventListener('input', f3ActualizarSaldoPreview);
 
+  function f3PoblarTerceroCompania(companiaIdActual) {
+    const companies = DB.getCompanies();
+    f3.terceroCompania.innerHTML = '<option value="">— Selecciona una compañía —</option>' +
+      companies.map(c => `<option value="${_escAttr(c.id)}">${_esc(c.nombre)}</option>`).join('');
+    if (companiaIdActual && companies.some(c => c.id === companiaIdActual)) {
+      f3.terceroCompania.value = companiaIdActual;
+    }
+  }
+
   function f3CargarRegistro(llaveId) {
     const rec = DB.getRecordById(llaveId);
     if (!rec) { toast('No se encontró ese registro.'); return; }
@@ -647,9 +660,15 @@
     f3State.items = rec.items.map(it => ({ ...it }));
     f3.fecha.value = rec.fecha;
     f3.tipo.value = (rec.tipo === 'entrada' ? 'Entrada' : 'Cuenta de cobro (Salida)') + (rec.anulado ? ' — ANULADO' : '');
-    f3.tercero.value = rec.tercero || '—';
 
     const esCuenta = rec.tipo === 'cuenta';
+    f3.terceroCompania.style.display = esCuenta ? 'block' : 'none';
+    f3.terceroTexto.style.display = esCuenta ? 'none' : 'block';
+    if (esCuenta) {
+      f3PoblarTerceroCompania(rec.companiaId);
+    } else {
+      f3.terceroTexto.value = rec.tercero || DB.getSettings().debeA || '';
+    }
     f3.estadoWrap.style.display = esCuenta ? 'block' : 'none';
     f3.saldoWrap.style.display = esCuenta ? 'flex' : 'none';
     f3.btnDescargar.style.display = esCuenta ? 'flex' : 'none';
@@ -744,6 +763,12 @@
       total
     };
     if (updated.tipo === 'cuenta') {
+      const companiaId = f3.terceroCompania.value;
+      if (!companiaId) { toast('Selecciona la compañía (tercero) de esta cuenta de cobro.'); return; }
+      const comp = DB.findCompanyById(companiaId);
+      updated.companiaId = companiaId;
+      updated.tercero = comp ? comp.nombre : updated.tercero;
+
       const estado = f3.estado.value;
       const abono = numVal(f3.abono);
       Object.assign(updated, DB.calcularEstadoRegistro({
@@ -751,6 +776,8 @@
         fechaPagoAnterior: f3State.record.fechaPago,
         estadoAnterior: f3State.record.estado
       }));
+    } else {
+      updated.tercero = f3.terceroTexto.value.trim();
     }
     DB.upsertRecord(updated);
     f3State.record = updated;
