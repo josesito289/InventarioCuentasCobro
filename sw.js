@@ -1,6 +1,6 @@
 /* sw.js — Service Worker: caché del app shell para funcionamiento 100% offline. */
 
-const CACHE_NAME = 'icc-cache-v2';
+const CACHE_NAME = 'icc-cache-v3';
 const ASSETS = [
   './',
   './index.html',
